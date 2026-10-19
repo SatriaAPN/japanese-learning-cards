@@ -1,0 +1,1510 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>KataKata · Katakana Cards</title>
+<meta name="description" content="Playful katakana flash cards. Tap or type the romaji, works offline.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#FFF3E4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1C1830" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" crossorigin href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
+<style>
+:root {
+  --bg: #FFF3E4;
+  --dot: #F5DCC2;
+  --surface: #FFFFFF;
+  --surface-2: #FFF8EF;
+  --ink: #2B2340;
+  --ink-soft: #6B6382;
+  --line: #2B2340;
+  --shade: #2B2340;
+  --on-color: #2B2340;
+  --primary: #FF6B8B;
+  --primary-2: #FF8FA8;
+  --sun: #FFC93C;
+  --sky: #5BC0EB;
+  --good: #2EC4A0;
+  --good-soft: #D2F7EA;
+  --bad: #FF5A5F;
+  --bad-soft: #FFE0E1;
+  --cell: #F3E7DA;
+  --m0: #FF9AAE; --m1: #FFB47E; --m2: #FFDB6E; --m3: #C2E88F; --m4: #7FDDB4; --m5: #67C7F5;
+  --neko: #FFB861; --neko-stripe: #E0823A; --neko-ear: #FF9AAE; --blush: #FF9AAE; --mouth: #FF6B8B;
+  --font: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Noto Sans JP", "Noto Sans CJK JP", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1C1830; --dot: #2A2445; --surface: #2B2547; --surface-2: #352E57;
+    --ink: #F7F1FF; --ink-soft: #B9B0D8; --line: #958BC9; --shade: #0C0918;
+    --good-soft: #1E4A43; --bad-soft: #57243A; --cell: #3B3460;
+  }
+  .neko { --line: #0C0918; }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--dot) 1.6px, transparent 1.8px);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font-family: var(--font);
+  font-weight: 500;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
+#app { max-width: 480px; margin: 0 auto; }
+.screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: max(12px, env(safe-area-inset-top)) 16px max(14px, env(safe-area-inset-bottom));
+}
+
+/* ---------- shared bits ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: 3px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 17px;
+  padding: 12px 16px;
+  box-shadow: 0 5px 0 var(--shade);
+  transition: transform .08s, box-shadow .08s, background-color .15s;
+  user-select: none;
+}
+.btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 var(--shade); }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.btn-big { width: 100%; font-size: 22px; padding: 14px 16px; border-radius: 22px; box-shadow: 0 6px 0 var(--shade); }
+.btn-pink { background: var(--primary); color: var(--on-color); }
+.btn-sky { background: var(--sky); color: var(--on-color); }
+.btn-sun { background: var(--sun); color: var(--on-color); }
+.btn-mint { background: var(--good); color: var(--on-color); }
+.icon-btn {
+  width: 44px; height: 44px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 3px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 3px 0 var(--shade);
+  font-size: 20px; font-weight: 800; line-height: 1;
+  padding: 0;
+}
+.icon-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--shade); }
+.panel {
+  background: var(--surface);
+  border: 3px solid var(--line);
+  border-radius: 24px;
+  box-shadow: 0 6px 0 var(--shade);
+  padding: 14px;
+  margin-top: 18px;
+}
+.label {
+  font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 6px;
+}
+.field + .field { margin-top: 14px; }
+.seg { display: flex; gap: 8px; }
+.seg button {
+  flex: 1; min-width: 0;
+  font-weight: 800; font-size: 15px;
+  padding: 10px 4px;
+  border-radius: 14px;
+  border: 2.5px solid var(--line);
+  background: var(--surface-2);
+  box-shadow: 0 3px 0 var(--shade);
+  transition: transform .08s, box-shadow .08s, background-color .15s;
+  white-space: nowrap;
+}
+.seg button[aria-pressed="true"] { background: var(--sun); color: var(--on-color); }
+.seg button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--shade); }
+.hint { margin: 10px 0 0; font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+
+/* speech bubble */
+.bubble {
+  position: relative;
+  background: var(--surface);
+  border: 3px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 4px 0 var(--shade);
+  padding: 8px 12px;
+  display: flex; flex-direction: column;
+  min-width: 0;
+}
+.bubble::before {
+  content: "";
+  position: absolute; left: -11px; bottom: 14px;
+  width: 16px; height: 16px;
+  background: var(--surface);
+  border-left: 3px solid var(--line);
+  border-bottom: 3px solid var(--line);
+  transform: rotate(45deg);
+  border-radius: 0 0 0 4px;
+}
+.bubble.up::before { left: 50%; top: -11px; bottom: auto; margin-left: -8px; transform: rotate(135deg); }
+.b-kana { font-size: 22px; font-weight: 800; line-height: 1.25; }
+.b-sub { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.bubble.pop { animation: bubble-pop .35s cubic-bezier(.34,1.56,.64,1); }
+
+/* the cat */
+.neko { display: block; width: 100%; height: auto; overflow: visible; }
+.neko .eyes, .neko .mouth, .neko .sweat, .neko .spark { display: none; }
+.neko[data-mood="idle"] .eyes-idle, .neko[data-mood="idle"] .mouth-idle,
+.neko[data-mood="happy"] .eyes-happy, .neko[data-mood="happy"] .mouth-happy,
+.neko[data-mood="sad"] .eyes-sad, .neko[data-mood="sad"] .mouth-sad, .neko[data-mood="sad"] .sweat,
+.neko[data-mood="wow"] .eyes-wow, .neko[data-mood="wow"] .mouth-wow, .neko[data-mood="wow"] .spark { display: inline; }
+.neko[data-mood="idle"] { animation: bob 2.6s ease-in-out infinite; }
+.neko.act[data-mood="happy"] { animation: hop .55s cubic-bezier(.34,1.56,.64,1); }
+.neko.act[data-mood="sad"] { animation: droop .6s ease; }
+.neko.act[data-mood="wow"] { animation: twirl .7s cubic-bezier(.34,1.56,.64,1); }
+.neko { transform-origin: 50% 90%; }
+
+/* ---------- home ---------- */
+.topbar { display: flex; align-items: center; gap: 10px; }
+.brand { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; }
+.logo { font-size: 30px; font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
+.logo b { display: inline-block; text-shadow: 2px 2px 0 var(--shade); -webkit-text-stroke: 1px var(--shade); }
+.logo b:nth-child(1) { color: var(--primary); transform: rotate(-6deg); }
+.logo b:nth-child(2) { color: var(--sun); transform: translateY(-2px) rotate(4deg); }
+.logo b:nth-child(3) { color: var(--sky); transform: rotate(-3deg); }
+.logo b:nth-child(4) { color: var(--good); transform: translateY(-2px) rotate(6deg); }
+.logo-sub { font-size: 13px; font-weight: 800; color: var(--ink-soft); white-space: nowrap; }
+.install { font-size: 14px; padding: 8px 12px; border-radius: 14px; box-shadow: 0 3px 0 var(--shade); }
+
+.hero { display: flex; align-items: flex-end; gap: 12px; margin-top: 16px; }
+.neko-btn { flex: none; width: 92px; padding: 0; border: 0; background: none; }
+.hero .bubble { flex: 1; margin-bottom: 10px; }
+
+.rows-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.summary { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.summary b { color: var(--ink); }
+.quick { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 6px; }
+.chip {
+  font-size: 13px; font-weight: 800;
+  padding: 6px 11px;
+  border-radius: 99px;
+  border: 2.5px solid var(--line);
+  background: var(--surface-2);
+  box-shadow: 0 2px 0 var(--shade);
+}
+.chip:active { transform: translateY(2px); box-shadow: none; }
+.group-title {
+  display: flex; align-items: center; gap: 8px;
+  margin: 14px 0 6px;
+  font-size: 15px; font-weight: 800;
+}
+.group-title span { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.row {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%;
+  padding: 6px;
+  border-radius: 16px;
+  border: 2.5px solid transparent;
+  background: transparent;
+  text-align: left;
+  transition: background-color .15s, box-shadow .15s;
+}
+.row + .row { margin-top: 5px; }
+.row[aria-pressed="true"] { background: var(--surface-2); border-color: var(--line); box-shadow: 0 3px 0 var(--shade); }
+.row[aria-pressed="false"] .cells { opacity: .8; filter: saturate(.55); }
+.tick {
+  flex: none;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 2.5px solid var(--line);
+  background: var(--surface);
+  display: grid; place-items: center;
+  font-size: 14px; font-weight: 800; color: var(--on-color);
+}
+.row[aria-pressed="true"] .tick { background: var(--sun); }
+.row[aria-pressed="true"] .tick::after { content: "✓"; }
+.cells { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; transition: opacity .15s; }
+.cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  min-height: 42px;
+  border-radius: 11px;
+  background: var(--cell);
+  color: var(--ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  line-height: 1;
+}
+.cell .k { font-size: 20px; font-weight: 800; }
+.cell .r { font-size: 10px; font-weight: 700; margin-top: 3px; }
+.cell[data-m] { color: var(--on-color); }
+.cell[data-m="0"], .swatch.m0 { background: var(--m0); }
+.cell[data-m="1"], .swatch.m1 { background: var(--m1); }
+.cell[data-m="2"], .swatch.m2 { background: var(--m2); }
+.cell[data-m="3"], .swatch.m3 { background: var(--m3); }
+.cell[data-m="4"], .swatch.m4 { background: var(--m4); }
+.cell[data-m="5"], .swatch.m5 { background: var(--m5); }
+.cell[data-m="5"]::after { content: "★"; position: absolute; top: 2px; right: 4px; font-size: 9px; }
+.legend { display: flex; align-items: center; gap: 4px; margin-top: 14px; font-size: 11px; font-weight: 700; color: var(--ink-soft); }
+.swatch { width: 14px; height: 14px; border-radius: 4px; background: var(--cell); border: 1.5px solid var(--line); }
+.legend .grow { flex: 1; }
+
+.startbar {
+  position: sticky; bottom: 0;
+  margin: 18px -16px 0;
+  padding: 18px 16px max(10px, env(safe-area-inset-bottom));
+  background: linear-gradient(to bottom, transparent, var(--bg) 35%);
+}
+.startbar small { display: block; font-size: 13px; font-weight: 700; opacity: .85; }
+#startBtn { flex-direction: column; gap: 0; line-height: 1.15; }
+
+/* ---------- quiz ---------- */
+#quiz { height: 100vh; height: 100dvh; }
+.quizbar { display: flex; align-items: center; gap: 10px; }
+.progress {
+  flex: 1;
+  height: 18px;
+  border-radius: 99px;
+  border: 3px solid var(--line);
+  background: var(--surface);
+  overflow: hidden;
+}
+.progress i {
+  display: block; height: 100%; width: 0;
+  background: repeating-linear-gradient(-45deg, var(--primary) 0 9px, var(--primary-2) 9px 18px);
+  border-right: 3px solid var(--line);
+  transition: width .35s ease;
+}
+.progress i[style*="width: 0%"] { border-right: 0; }
+.count { font-weight: 800; font-size: 15px; min-width: 46px; text-align: right; font-variant-numeric: tabular-nums; }
+.combo {
+  position: absolute; right: 0; top: 0; z-index: 2;
+  font-weight: 800; font-size: 15px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 2.5px solid var(--line);
+  background: var(--sun);
+  color: var(--on-color);
+  box-shadow: 0 3px 0 var(--shade);
+}
+.combo.pop { animation: bubble-pop .35s cubic-bezier(.34,1.56,.64,1); }
+.stage {
+  position: relative;
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px;
+  padding: 10px 0 6px;
+}
+.qhero { display: flex; align-items: flex-end; gap: 10px; width: 100%; max-width: 340px; min-height: 66px; }
+.qhero .neko-box { flex: none; width: 62px; }
+.qhero .bubble { flex: 1; padding: 6px 10px; }
+.qhero .b-kana { font-size: 18px; }
+.qhero .b-sub { font-size: 12px; }
+.card {
+  position: relative;
+  width: 100%; max-width: 340px;
+  background: var(--surface);
+  border: 3px solid var(--line);
+  border-radius: 28px;
+  box-shadow: 0 8px 0 var(--shade);
+  padding: 16px 14px 12px;
+  text-align: center;
+  transition: background-color .2s;
+}
+.card::before {
+  content: "";
+  position: absolute; top: -13px; left: 50%;
+  width: 74px; height: 22px;
+  margin-left: -37px;
+  transform: rotate(-3deg);
+  background: var(--sun);
+  border: 2.5px solid var(--line);
+  border-radius: 6px;
+}
+.card-hint { font-size: 13px; font-weight: 800; color: var(--ink-soft); margin-top: 4px; }
+.prompt { font-weight: 800; line-height: 1.2; margin: 2px 0; overflow-wrap: anywhere; }
+.prompt.is-kana { font-size: clamp(64px, min(36vw, 22dvh), 160px); }
+.prompt.is-romaji { font-size: clamp(44px, min(17vw, 12dvh), 92px); line-height: 1.5; }
+.reveal { min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.reveal .ans { font-size: 20px; font-weight: 800; }
+.reveal small { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.reveal .oops { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.card.good { background: var(--good-soft); }
+.card.bad { background: var(--bad-soft); }
+.card.deal { animation: deal .4s cubic-bezier(.34,1.56,.64,1); }
+.card.good { animation: bounce .5s ease; }
+.card.bad { animation: shake .42s ease; }
+
+/* Next sits above the choices so they don't jump when it appears. */
+.answers { padding-top: 8px; display: flex; flex-direction: column; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.choice {
+  position: relative;
+  min-height: 72px;
+  font-weight: 800;
+  border-radius: 20px;
+  border: 3px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 5px 0 var(--shade);
+  transition: transform .08s, box-shadow .08s, background-color .15s, opacity .15s;
+  touch-action: manipulation;
+}
+.choice.is-romaji { font-size: 28px; }
+.choice.is-kana { font-size: 40px; }
+.choice:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 var(--shade); }
+.choice:disabled { cursor: default; }
+.choice:disabled:not(.correct):not(.wrong) { opacity: .45; }
+.choice.correct { background: var(--good); color: var(--on-color); }
+.choice.wrong { background: var(--bad); color: var(--on-color); animation: shake .42s ease; }
+.kbd { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .kbd {
+    display: block; position: absolute; top: 6px; left: 9px;
+    font-size: 11px; font-weight: 800; color: var(--ink-soft);
+  }
+  .choice.correct .kbd, .choice.wrong .kbd { color: var(--on-color); }
+}
+.typebox { display: flex; gap: 8px; }
+.typebox input {
+  flex: 1; min-width: 0;
+  font: inherit; font-size: 28px; font-weight: 800;
+  text-align: center;
+  padding: 10px 12px;
+  border-radius: 18px;
+  border: 3px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: inset 0 4px 0 rgba(0,0,0,.07);
+}
+.typebox input::placeholder { color: var(--ink-soft); opacity: .6; font-size: 20px; }
+.typebox input.good { background: var(--good-soft); }
+.typebox input.bad { background: var(--bad-soft); }
+.typebox input.nudge { animation: shake .3s ease; }
+.typebox .btn { padding: 10px 14px; border-radius: 18px; }
+#skipBtn { min-width: 52px; }
+#nextBtn { order: -1; margin: 0 0 12px; }
+
+@media (max-height: 640px) {
+  .qhero { display: none; }
+  .stage { gap: 8px; padding-top: 16px; }
+  .card { padding-top: 12px; }
+}
+
+/* ---------- results ---------- */
+.results-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; padding-top: 8px; }
+.rhero { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.rhero .neko-box { width: 128px; }
+.rhero .bubble { align-items: center; padding: 8px 18px; }
+.rhero .b-kana { font-size: 28px; }
+.score {
+  display: grid; place-items: center;
+  width: 150px; height: 150px;
+  border-radius: 50%;
+  border: 3px solid var(--line);
+  background: var(--sun);
+  color: var(--on-color);
+  box-shadow: 0 6px 0 var(--shade);
+  transform: rotate(-5deg);
+  font-weight: 800;
+  line-height: 1;
+}
+.score b { font-size: 60px; }
+.score span { font-size: 20px; opacity: .8; }
+.stats { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.stat {
+  font-size: 14px; font-weight: 800;
+  padding: 7px 12px;
+  border-radius: 99px;
+  border: 2.5px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 3px 0 var(--shade);
+}
+.missed { width: 100%; margin-top: 0; text-align: left; }
+.missed-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.mchip {
+  display: flex; flex-direction: column; align-items: center;
+  min-width: 56px;
+  padding: 6px 8px;
+  border-radius: 14px;
+  border: 2.5px solid var(--line);
+  background: var(--m0);
+  color: var(--on-color);
+  line-height: 1.1;
+}
+.mchip b { font-size: 26px; }
+.mchip small { font-size: 12px; font-weight: 700; }
+.perfect-note { font-weight: 800; color: var(--ink-soft); margin: 0; }
+.results-actions { width: 100%; display: flex; flex-direction: column; gap: 14px; margin-top: auto; padding-top: 8px; }
+
+/* ---------- settings dialog ---------- */
+dialog {
+  width: min(92vw, 380px);
+  border: 3px solid var(--line);
+  border-radius: 26px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 8px 0 var(--shade);
+  padding: 18px;
+}
+dialog::backdrop { background: rgba(28, 24, 48, .5); }
+dialog h2 { margin: 0 0 14px; font-size: 22px; }
+.switch { display: flex; align-items: center; gap: 12px; padding: 8px 0; font-weight: 800; cursor: pointer; }
+.switch input { position: absolute; opacity: 0; pointer-events: none; }
+.track {
+  flex: none;
+  position: relative;
+  width: 52px; height: 30px;
+  border-radius: 99px;
+  border: 2.5px solid var(--line);
+  background: var(--cell);
+  transition: background-color .15s;
+}
+.track::after {
+  content: "";
+  position: absolute; top: 2px; left: 2px;
+  width: 21px; height: 21px;
+  border-radius: 50%;
+  border: 2.5px solid var(--line);
+  background: var(--surface);
+  transition: transform .18s cubic-bezier(.34,1.56,.64,1);
+}
+.switch input:checked + .track { background: var(--good); }
+.switch input:checked + .track::after { transform: translateX(22px); }
+.switch input:focus-visible + .track { outline: 3px solid var(--sky); outline-offset: 2px; }
+.dialog-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.btn-danger { background: var(--bad-soft); }
+.btn-danger[data-armed] { background: var(--bad); color: var(--on-color); }
+.small { font-size: 13px; font-weight: 700; color: var(--ink-soft); margin: 12px 0 0; }
+
+/* ---------- effects ---------- */
+#fx { position: fixed; inset: 0; pointer-events: none; z-index: 50; overflow: hidden; }
+.bit { position: absolute; display: block; border-radius: 2px; }
+.bit.ci { border-radius: 50%; }
+
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes hop { 0% { transform: translateY(0) scale(1); } 35% { transform: translateY(-14px) scale(1.05, .95); } 70% { transform: translateY(0) scale(1.06, .94); } 100% { transform: translateY(0) scale(1); } }
+@keyframes droop { 0% { transform: rotate(0); } 30% { transform: rotate(-8deg) translateY(3px); } 60% { transform: rotate(5deg) translateY(3px); } 100% { transform: rotate(0); } }
+@keyframes twirl { 0% { transform: scale(1) rotate(0); } 40% { transform: scale(1.18) rotate(-12deg); } 100% { transform: scale(1) rotate(0); } }
+@keyframes deal { 0% { transform: translateY(24px) scale(.9) rotate(-4deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 35% { transform: translateY(-12px) scale(1.03); } 65% { transform: translateY(0); } 82% { transform: translateY(-4px); } }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-9px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(4px); } }
+@keyframes bubble-pop { 0% { transform: scale(.7); } 100% { transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== HOME ===== -->
+  <section id="home" class="screen">
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo" lang="ja" aria-label="KataKata"><b>カ</b><b>タ</b><b>カ</b><b>タ</b></span>
+        <span class="logo-sub">katakana cards</span>
+      </div>
+      <button type="button" id="installBtn" class="btn btn-mint install" hidden>Install</button>
+      <button type="button" id="settingsBtn" class="icon-btn" aria-label="Settings">⚙</button>
+    </header>
+
+    <div class="hero">
+      <button type="button" class="neko-btn" id="homeNeko" aria-label="Pet the cat" data-neko></button>
+      <div class="bubble" id="homeBubble" aria-live="polite"></div>
+    </div>
+
+    <div class="panel">
+      <div class="field">
+        <p class="label">Answer by</p>
+        <div class="seg" role="group" aria-label="Answer by">
+          <button type="button" data-set="mode" data-val="tap">👆 Tap</button>
+          <button type="button" data-set="mode" data-val="type">⌨️ Type</button>
+        </div>
+      </div>
+      <div class="field">
+        <p class="label">Quiz me on</p>
+        <div class="seg" role="group" aria-label="Quiz direction">
+          <button type="button" data-set="dir" data-val="fwd"><span lang="ja">カ</span> → ka</button>
+          <button type="button" data-set="dir" data-val="rev">ka → <span lang="ja">カ</span></button>
+          <button type="button" data-set="dir" data-val="mix">🔀 Mix</button>
+        </div>
+      </div>
+      <div class="field">
+        <p class="label">Cards per round</p>
+        <div class="seg" role="group" aria-label="Cards per round">
+          <button type="button" data-set="count" data-val="10">10</button>
+          <button type="button" data-set="count" data-val="20">20</button>
+          <button type="button" data-set="count" data-val="30">30</button>
+        </div>
+      </div>
+      <p class="hint" id="modeHint" hidden>Heads up: ka → <span lang="ja">カ</span> cards are always tap-to-answer.</p>
+    </div>
+
+    <div class="panel">
+      <div class="rows-head">
+        <p class="label">Pick your rows</p>
+        <span class="summary" id="summary"></span>
+      </div>
+      <div class="quick">
+        <button type="button" class="chip" data-quick="basic">Basic</button>
+        <button type="button" class="chip" data-quick="voiced">Voiced</button>
+        <button type="button" class="chip" data-quick="all">All</button>
+        <button type="button" class="chip" data-quick="none">Clear</button>
+      </div>
+      <div class="group-title">Basic <span>46 kana</span></div>
+      <div id="rowsBasic"></div>
+      <div class="group-title">Voiced <span lang="ja">゛゜</span> <span>25 kana</span></div>
+      <div id="rowsVoiced"></div>
+      <div class="legend" aria-hidden="true">
+        <span class="swatch"></span> new
+        <span class="grow"></span>
+        tricky <span class="swatch m0"></span><span class="swatch m1"></span><span class="swatch m2"></span><span class="swatch m3"></span><span class="swatch m4"></span><span class="swatch m5"></span> mastered ★
+      </div>
+    </div>
+
+    <div class="startbar">
+      <button type="button" id="startBtn" class="btn btn-big btn-pink"></button>
+    </div>
+  </section>
+
+  <!-- ===== QUIZ ===== -->
+  <section id="quiz" class="screen" hidden>
+    <header class="quizbar">
+      <button type="button" id="quitBtn" class="icon-btn" aria-label="Quit round">✕</button>
+      <div class="progress" role="progressbar" aria-label="Round progress" aria-valuemin="0" aria-valuemax="100" id="progress"><i id="bar"></i></div>
+      <span class="count" id="count">1/20</span>
+    </header>
+
+    <div class="stage">
+      <div class="qhero">
+        <div class="neko-box" data-neko></div>
+        <div class="bubble" id="quizBubble" aria-live="polite"></div>
+      </div>
+      <span class="combo" id="combo" hidden></span>
+      <div class="card" id="card">
+        <div class="card-hint" id="cardHint"></div>
+        <div class="prompt" id="prompt"></div>
+        <div class="reveal" id="reveal" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="answers">
+      <div class="choices" id="choices"></div>
+      <form class="typebox" id="typeForm" autocomplete="off" hidden>
+        <input id="typeInput" type="text" inputmode="text" enterkeyhint="go" maxlength="6"
+               autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"
+               placeholder="type romaji…" aria-label="Type the romaji">
+        <button type="submit" class="btn btn-sky" id="checkBtn">Check</button>
+        <button type="button" class="btn" id="skipBtn" aria-label="I don't know, show me">?</button>
+      </form>
+      <button type="button" id="nextBtn" class="btn btn-big btn-sky" hidden>Next →</button>
+    </div>
+  </section>
+
+  <!-- ===== RESULTS ===== -->
+  <section id="results" class="screen" hidden>
+    <div class="results-wrap">
+      <div class="rhero">
+        <div class="neko-box" data-neko></div>
+        <div class="bubble up" id="resultsBubble" aria-live="polite"></div>
+      </div>
+      <div class="score" id="score"></div>
+      <div class="stats" id="stats"></div>
+      <div class="panel missed" id="missedPanel">
+        <p class="label">Practice these</p>
+        <div class="missed-list" id="missedList"></div>
+      </div>
+      <p class="perfect-note" id="perfectNote" hidden>No mistakes at all. Try more rows? 🎉</p>
+      <div class="results-actions">
+        <button type="button" id="practiceBtn" class="btn btn-big btn-pink"></button>
+        <button type="button" id="againBtn" class="btn btn-big btn-sun">Play again ↻</button>
+        <button type="button" id="homeBtn" class="btn btn-big">Home</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<dialog id="settings" aria-labelledby="settingsTitle">
+  <h2 id="settingsTitle">Settings</h2>
+  <label class="switch"><input type="checkbox" id="optSound" role="switch"><span class="track"></span><span>Sound effects</span></label>
+  <label class="switch" id="vibrateRow"><input type="checkbox" id="optVibrate" role="switch"><span class="track"></span><span>Buzz on mistakes</span></label>
+  <div class="dialog-actions">
+    <button type="button" id="resetBtn" class="btn btn-danger">Reset progress</button>
+    <form method="dialog"><button class="btn btn-sun btn-big" style="font-size:18px">Done</button></form>
+  </div>
+  <p class="small">Your progress is saved on this device only.</p>
+</dialog>
+
+<div id="fx" aria-hidden="true"></div>
+
+<noscript><p style="padding:16px;font-weight:800">KataKata needs JavaScript to run.</p></noscript>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= data ================= */
+
+// [row id, group, "kana:romaji/alt ..."] — the first romaji is the one we show.
+const ROW_DEFS = [
+  ['a', 'basic',  'ア:a イ:i ウ:u エ:e オ:o'],
+  ['k', 'basic',  'カ:ka キ:ki ク:ku ケ:ke コ:ko'],
+  ['s', 'basic',  'サ:sa シ:shi/si ス:su セ:se ソ:so'],
+  ['t', 'basic',  'タ:ta チ:chi/ti ツ:tsu/tu テ:te ト:to'],
+  ['n', 'basic',  'ナ:na ニ:ni ヌ:nu ネ:ne ノ:no'],
+  ['h', 'basic',  'ハ:ha ヒ:hi フ:fu/hu ヘ:he ホ:ho'],
+  ['m', 'basic',  'マ:ma ミ:mi ム:mu メ:me モ:mo'],
+  ['y', 'basic',  'ヤ:ya ユ:yu ヨ:yo'],
+  ['r', 'basic',  'ラ:ra リ:ri ル:ru レ:re ロ:ro'],
+  ['w', 'basic',  'ワ:wa ヲ:wo/o ン:n/nn'],
+  ['g', 'voiced', 'ガ:ga ギ:gi グ:gu ゲ:ge ゴ:go'],
+  ['z', 'voiced', 'ザ:za ジ:ji/zi ズ:zu ゼ:ze ゾ:zo'],
+  ['d', 'voiced', 'ダ:da ヂ:ji/di/zi ヅ:zu/du デ:de ド:do'],
+  ['b', 'voiced', 'バ:ba ビ:bi ブ:bu ベ:be ボ:bo'],
+  ['p', 'voiced', 'パ:pa ピ:pi プ:pu ペ:pe ポ:po'],
+];
+
+const KANA = {};
+const ROWS = [];
+const ALL_IDS = [];
+for (const [rowId, group, spec] of ROW_DEFS) {
+  const ids = spec.split(' ').map(token => {
+    const [kana, romaji] = token.split(':');
+    const accept = romaji.split('/');
+    KANA[kana] = { id: kana, romaji: accept[0], accept, row: rowId, group };
+    ALL_IDS.push(kana);
+    return kana;
+  });
+  ROWS.push({ id: rowId, group, ids });
+}
+// ヂ/ヅ sound the same as ジ/ズ, so the romaji prompt needs a hint to tell them apart.
+KANA['ヂ'].label = 'ji (di)';
+KANA['ヅ'].label = 'zu (du)';
+
+const ALL_ACCEPT = [...new Set(ALL_IDS.flatMap(id => KANA[id].accept))];
+const ROMAJI_TO_ID = {};
+for (const id of ALL_IDS) for (const r of KANA[id].accept) if (!(r in ROMAJI_TO_ID)) ROMAJI_TO_ID[r] = id;
+
+// Look-alike kana, used to pick tricky wrong answers.
+const LOOK_GROUPS = [
+  'シツソン', 'ノメ', 'ソリ', 'クケタ', 'クワ', 'ワウフ', 'フラヲ', 'ヌメス', 'ナメ', 'チテナ',
+  'コユロ', 'コヨ', 'エユ', 'ニミ', 'ニエ', 'マア', 'マム', 'セヒ', 'サセ', 'ヤセ', 'キモ',
+  'ハル', 'レル', 'オホ', 'ホネ',
+];
+const DAKUTEN_BASE = 'カキクケコサシスセソタチツテトハヒフヘホ';
+const HANDAKUTEN_BASE = 'ハヒフヘホ';
+const LOOK = Object.fromEntries(ALL_IDS.map(id => [id, new Set()]));
+const SIBLING = Object.fromEntries(ALL_IDS.map(id => [id, new Set()]));
+const shiftKana = (ch, n) => String.fromCodePoint(ch.codePointAt(0) + n);
+const link = (a, b, map) => { if (a !== b && KANA[a] && KANA[b]) { map[a].add(b); map[b].add(a); } };
+for (const ch of DAKUTEN_BASE) {
+  link(ch, shiftKana(ch, 1), LOOK);
+  link(ch, shiftKana(ch, 1), SIBLING);
+}
+for (const ch of HANDAKUTEN_BASE) {
+  for (const [a, b] of [[ch, shiftKana(ch, 2)], [shiftKana(ch, 1), shiftKana(ch, 2)]]) {
+    link(a, b, LOOK);
+    link(a, b, SIBLING);
+  }
+}
+for (const group of LOOK_GROUPS) {
+  for (const a of group) for (const b of group) {
+    link(a, b, LOOK);
+    if (DAKUTEN_BASE.includes(a) && DAKUTEN_BASE.includes(b)) link(shiftKana(a, 1), shiftKana(b, 1), LOOK);
+    if (HANDAKUTEN_BASE.includes(a) && HANDAKUTEN_BASE.includes(b)) link(shiftKana(a, 2), shiftKana(b, 2), LOOK);
+  }
+}
+
+// Cat chatter. Every line is itself a katakana word, with romaji + meaning.
+const LINES = {
+  hello: [
+    ['ハロー!', 'haroo', 'hello!'],
+    ['レッツゴー!', 'rettsu goo', "let's go!"],
+    ['ヨロシク!', 'yoroshiku', 'nice to meet you!'],
+    ['ファイト!', 'faito', 'you got this!'],
+    ['ガンバロウ!', 'ganbarou', "let's do our best!"],
+  ],
+  words: [
+    ['コーヒー', 'koohii', 'coffee ☕'],
+    ['テレビ', 'terebi', 'TV 📺'],
+    ['パン', 'pan', 'bread 🍞'],
+    ['アイス', 'aisu', 'ice cream 🍦'],
+    ['ゲーム', 'geemu', 'video game 🎮'],
+    ['カメラ', 'kamera', 'camera 📷'],
+    ['ピザ', 'piza', 'pizza 🍕'],
+    ['ネコ', 'neko', "cat. That's me! 🐱"],
+  ],
+  good: [
+    ['ナイス!', 'naisu', 'nice!'],
+    ['グッド!', 'guddo', 'good!'],
+    ['スゴイ!', 'sugoi', 'amazing!'],
+    ['パーフェクト!', 'paafekuto', 'perfect!'],
+    ['オーケー!', 'ookee', 'OK!'],
+    ['ビンゴ!', 'bingo', 'bingo!'],
+    ['グレート!', 'gureeto', 'great!'],
+  ],
+  bad: [
+    ['ドンマイ!', 'donmai', 'never mind!'],
+    ['オシイ!', 'oshii', 'so close!'],
+    ['ファイト!', 'faito', 'keep going!'],
+    ['ダイジョウブ!', 'daijoubu', "it's okay!"],
+  ],
+  perfect: ['パーフェクト!', 'paafekuto', 'perfect round!'],
+  great:   ['スゴイ!', 'sugoi', 'amazing!'],
+  ok:      ['ナイス・トライ!', 'naisu torai', 'nice try!'],
+  low:     ['ドンマイ!', 'donmai', 'never mind, go again!'],
+};
+
+/* ================= storage ================= */
+
+const STORE_KEY = 'katakata:v1';
+const DEFAULTS = { mode: 'tap', dir: 'fwd', count: 20, rows: ['a', 'k'], sound: true, vibrate: true };
+const store = loadStore();
+
+function loadStore() {
+  let data = null;
+  try { data = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { data = null; }
+  const saved = data && typeof data.settings === 'object' ? data.settings : {};
+  const s = Object.assign({}, DEFAULTS, saved);
+  if (!['tap', 'type'].includes(s.mode)) s.mode = DEFAULTS.mode;
+  if (!['fwd', 'rev', 'mix'].includes(s.dir)) s.dir = DEFAULTS.dir;
+  if (![10, 20, 30].includes(s.count)) s.count = DEFAULTS.count;
+  s.rows = Array.isArray(s.rows) ? s.rows.filter(id => ROWS.some(r => r.id === id)) : DEFAULTS.rows.slice();
+  s.sound = s.sound !== false;
+  s.vibrate = s.vibrate !== false;
+  const stats = {};
+  const savedStats = data && data.stats && typeof data.stats === 'object' ? data.stats : {};
+  for (const id of ALL_IDS) {
+    const v = savedStats[id];
+    if (v && typeof v === 'object') {
+      stats[id] = {
+        seen: +v.seen || 0, right: +v.right || 0, wrong: +v.wrong || 0,
+        box: Math.max(0, Math.min(5, v.box | 0)), last: +v.last || 0,
+      };
+    }
+  }
+  return { settings: s, stats };
+}
+function saveStore() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) { /* private mode etc. */ }
+}
+
+/* ================= helpers ================= */
+
+const $ = sel => document.querySelector(sel);
+const shuffle = arr => {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const overlaps = (a, b) => a.accept.some(r => b.accept.includes(r));
+const mastery = id => { const s = store.stats[id]; return s && s.seen ? s.box : -1; };
+const promptText = k => k.label || k.romaji;
+
+function restartAnim(el, cls) {
+  el.classList.remove(cls);
+  void el.getBoundingClientRect();
+  el.classList.add(cls);
+}
+
+/* ================= the cat ================= */
+
+const NEKO_SVG = `
+<svg class="neko" data-mood="idle" viewBox="0 0 120 108" aria-hidden="true">
+  <g stroke="var(--line)" stroke-width="4" stroke-linejoin="round">
+    <path d="M20 46 L25 8 L52 27 Z" fill="var(--neko)"/>
+    <path d="M100 46 L95 8 L68 27 Z" fill="var(--neko)"/>
+  </g>
+  <path d="M28 36 L30 18 L43 28 Z" fill="var(--neko-ear)"/>
+  <path d="M92 36 L90 18 L77 28 Z" fill="var(--neko-ear)"/>
+  <ellipse cx="60" cy="64" rx="48" ry="40" fill="var(--neko)" stroke="var(--line)" stroke-width="4"/>
+  <g stroke="var(--neko-stripe)" stroke-width="4" stroke-linecap="round">
+    <path d="M60 27 v8"/><path d="M49 29 l2 7"/><path d="M71 29 l-2 7"/>
+  </g>
+  <ellipse cx="31" cy="77" rx="8" ry="5" fill="var(--blush)" opacity=".8"/>
+  <ellipse cx="89" cy="77" rx="8" ry="5" fill="var(--blush)" opacity=".8"/>
+  <g class="eyes eyes-idle">
+    <ellipse cx="42" cy="62" rx="5.5" ry="7.5" fill="var(--line)"/><ellipse cx="78" cy="62" rx="5.5" ry="7.5" fill="var(--line)"/>
+    <circle cx="44" cy="59" r="2.2" fill="#fff"/><circle cx="80" cy="59" r="2.2" fill="#fff"/>
+  </g>
+  <g class="eyes eyes-happy" fill="none" stroke="var(--line)" stroke-width="4.5" stroke-linecap="round">
+    <path d="M34 65 q8 -12 16 0"/><path d="M70 65 q8 -12 16 0"/>
+  </g>
+  <g class="eyes eyes-sad" fill="none" stroke="var(--line)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36 56 l11 6 l-11 6"/><path d="M84 56 l-11 6 l11 6"/>
+  </g>
+  <g class="eyes eyes-wow">
+    <circle cx="42" cy="62" r="9" fill="var(--line)"/><circle cx="78" cy="62" r="9" fill="var(--line)"/>
+    <circle cx="45" cy="58.5" r="3.2" fill="#fff"/><circle cx="81" cy="58.5" r="3.2" fill="#fff"/>
+    <circle cx="39" cy="65.5" r="1.6" fill="#fff"/><circle cx="75" cy="65.5" r="1.6" fill="#fff"/>
+  </g>
+  <path d="M55.5 72 h9 l-4.5 4.5 z" fill="var(--neko-ear)" stroke="var(--line)" stroke-width="2.5" stroke-linejoin="round"/>
+  <path class="mouth mouth-idle" d="M50 80 q5 5 10 0 q5 5 10 0" fill="none" stroke="var(--line)" stroke-width="3.5" stroke-linecap="round"/>
+  <path class="mouth mouth-happy" d="M49 79 q11 15 22 0 z" fill="var(--mouth)" stroke="var(--line)" stroke-width="3.5" stroke-linejoin="round"/>
+  <path class="mouth mouth-sad" d="M51 86 q9 -7 18 0" fill="none" stroke="var(--line)" stroke-width="3.5" stroke-linecap="round"/>
+  <ellipse class="mouth mouth-wow" cx="60" cy="84" rx="5.5" ry="6.5" fill="var(--mouth)" stroke="var(--line)" stroke-width="3.5"/>
+  <g stroke="var(--line)" stroke-width="2.5" stroke-linecap="round">
+    <path d="M3 68 l17 3"/><path d="M3 79 l17 -1"/><path d="M117 68 l-17 3"/><path d="M117 79 l-17 -1"/>
+  </g>
+  <path class="sweat" d="M100 38 q6 9 0 13 q-6 -4 0 -13 z" fill="var(--sky)" stroke="var(--line)" stroke-width="2.5"/>
+  <g class="spark" fill="var(--sun)" stroke="var(--line)" stroke-width="2" stroke-linejoin="round">
+    <path d="M10 22 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3 z"/>
+    <path d="M110 18 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2 z"/>
+  </g>
+</svg>`;
+document.querySelectorAll('[data-neko]').forEach(el => { el.innerHTML = NEKO_SVG; });
+
+function setMood(screen, mood) {
+  const svg = screen.querySelector('.neko');
+  if (!svg) return;
+  svg.setAttribute('data-mood', mood);
+  restartAnim(svg, 'act');
+}
+function say(bubble, [kana, romaji, meaning]) {
+  bubble.innerHTML = `<span class="b-kana" lang="ja">${kana}</span><span class="b-sub">${romaji} · ${meaning}</span>`;
+  restartAnim(bubble, 'pop');
+}
+
+/* ================= sound + buzz ================= */
+
+const Sound = {
+  ctx: null,
+  ensure() {
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try { this.ctx = new AC(); } catch (e) { return null; }
+    }
+    if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+    return this.ctx;
+  },
+  tone(freq, start, dur, type = 'triangle', vol = 0.16, slideTo = 0) {
+    const ctx = this.ctx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, start);
+    if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, start + dur);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(vol, start + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + dur + 0.03);
+  },
+  play(name) {
+    if (!store.settings.sound) return;
+    const ctx = this.ensure();
+    if (!ctx) return;
+    const t = ctx.currentTime + 0.01;
+    if (name === 'good') { this.tone(880, t, 0.12); this.tone(1318.5, t + 0.08, 0.2); }
+    else if (name === 'bad') { this.tone(240, t, 0.3, 'square', 0.06, 150); }
+    else if (name === 'tap') { this.tone(660, t, 0.06, 'sine', 0.08); }
+    else if (name === 'combo') { [784, 988, 1175, 1568].forEach((f, i) => this.tone(f, t + i * 0.07, 0.18)); }
+    else if (name === 'win') { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => this.tone(f, t + i * 0.11, i === 5 ? 0.4 : 0.2)); }
+    else if (name === 'meow') { this.tone(700, t, 0.28, 'sine', 0.12, 1100); this.tone(1100, t + 0.2, 0.25, 'sine', 0.1, 600); }
+  },
+};
+function buzz(ms) {
+  if (!store.settings.vibrate || !navigator.vibrate) return;
+  try { navigator.vibrate(ms); } catch (e) { /* ignore */ }
+}
+
+/* ================= confetti ================= */
+
+const FX_COLORS = ['#FF6B8B', '#FFC93C', '#5BC0EB', '#2EC4A0', '#B38CFF', '#FF9F59'];
+function burst(el, { count = 60, power = 1 } = {}) {
+  if (reduceMotion.matches || !Element.prototype.animate) return;
+  const box = el.getBoundingClientRect();
+  const x = box.left + box.width / 2, y = box.top + box.height / 2;
+  const layer = $('#fx');
+  for (let n = 0; n < count; n++) {
+    const bit = document.createElement('i');
+    bit.className = 'bit' + (Math.random() < 0.4 ? ' ci' : '');
+    const size = 6 + Math.random() * 8;
+    bit.style.cssText = `left:${x}px;top:${y}px;width:${size}px;height:${size * (0.6 + Math.random() * 0.8)}px;background:${pick(FX_COLORS)}`;
+    layer.appendChild(bit);
+    const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.2;
+    const speed = (110 + Math.random() * 260) * power;
+    const dx = Math.cos(angle) * speed, dy = Math.sin(angle) * speed;
+    const spin = (Math.random() - 0.5) * 720;
+    const anim = bit.animate([
+      { transform: 'translate(-50%,-50%)', opacity: 1 },
+      { transform: `translate(-50%,-50%) translate(${dx}px,${dy}px) rotate(${spin / 2}deg)`, opacity: 1, offset: 0.45 },
+      { transform: `translate(-50%,-50%) translate(${dx * 1.25}px,${dy + 320 * power}px) rotate(${spin}deg)`, opacity: 0 },
+    ], { duration: 1000 + Math.random() * 700, easing: 'cubic-bezier(.15,.7,.4,1)' });
+    anim.onfinish = () => bit.remove();
+  }
+}
+
+/* ================= screens + history ================= */
+
+const screens = { home: $('#home'), quiz: $('#quiz'), results: $('#results') };
+function showScreen(name) {
+  for (const [key, el] of Object.entries(screens)) el.hidden = key !== name;
+  window.scrollTo(0, 0);
+}
+
+let quiz = null;
+let lastRun = null;
+
+function showHome() {
+  stopQuiz();
+  renderHome();
+  showScreen('home');
+  setMood(screens.home, 'idle');
+  say($('#homeBubble'), pick(LINES.hello));
+}
+function goHome() {
+  if (history.state && history.state.screen) history.back();
+  else showHome();
+}
+window.addEventListener('popstate', () => {
+  const st = history.state;
+  if (st && st.screen === 'quiz' && quiz) return;
+  if (st && st.screen) history.replaceState(null, '');
+  showHome();
+});
+
+/* ================= home ================= */
+
+const selectedPool = () => ROWS.filter(r => store.settings.rows.includes(r.id)).flatMap(r => r.ids);
+
+function renderHome() {
+  const s = store.settings;
+  document.querySelectorAll('[data-set]').forEach(btn => {
+    btn.setAttribute('aria-pressed', String(String(s[btn.dataset.set]) === btn.dataset.val));
+  });
+  $('#modeHint').hidden = !(s.mode === 'type' && s.dir !== 'fwd');
+
+  const html = { basic: '', voiced: '' };
+  for (const row of ROWS) {
+    const on = s.rows.includes(row.id);
+    const cells = row.ids.map(id => {
+      const m = mastery(id);
+      return `<span class="cell"${m >= 0 ? ` data-m="${m}"` : ''}><span class="k" lang="ja">${id}</span><span class="r">${KANA[id].romaji}</span></span>`;
+    }).join('');
+    const label = `Row ${row.ids.map(id => `${id} ${KANA[id].romaji}`).join(', ')}`;
+    html[row.group] += `<button type="button" class="row" data-row="${row.id}" aria-pressed="${on}" aria-label="${label}"><span class="tick" aria-hidden="true"></span><span class="cells">${cells}</span></button>`;
+  }
+  $('#rowsBasic').innerHTML = html.basic;
+  $('#rowsVoiced').innerHTML = html.voiced;
+
+  const seen = ALL_IDS.filter(id => mastery(id) >= 0).length;
+  const mastered = ALL_IDS.filter(id => mastery(id) === 5).length;
+  $('#summary').innerHTML = `<b>${mastered}</b> mastered · <b>${seen}</b>/${ALL_IDS.length} seen`;
+
+  const n = selectedPool().length;
+  const start = $('#startBtn');
+  start.disabled = n === 0;
+  start.innerHTML = n
+    ? `<span lang="ja">スタート!</span><small>${s.count} cards · ${n} kana</small>`
+    : `Pick a row first ↑`;
+}
+
+document.addEventListener('click', e => {
+  const setBtn = e.target.closest('[data-set]');
+  if (setBtn) {
+    const key = setBtn.dataset.set;
+    store.settings[key] = key === 'count' ? Number(setBtn.dataset.val) : setBtn.dataset.val;
+    saveStore();
+    renderHome();
+    Sound.play('tap');
+    return;
+  }
+  const rowBtn = e.target.closest('[data-row]');
+  if (rowBtn) {
+    const rows = new Set(store.settings.rows);
+    const id = rowBtn.dataset.row;
+    if (rows.has(id)) rows.delete(id); else rows.add(id);
+    store.settings.rows = ROWS.map(r => r.id).filter(r => rows.has(r));
+    const hadFocus = document.activeElement === rowBtn;
+    saveStore();
+    renderHome();
+    if (hadFocus) {
+      const again = document.querySelector(`[data-row="${id}"]`);
+      if (again) again.focus({ preventScroll: true });
+    }
+    Sound.play('tap');
+    return;
+  }
+  const quick = e.target.closest('[data-quick]');
+  if (quick) {
+    const q = quick.dataset.quick;
+    store.settings.rows = ROWS.filter(r => q === 'all' || r.group === q).map(r => r.id);
+    saveStore();
+    renderHome();
+    Sound.play('tap');
+  }
+});
+
+$('#homeNeko').addEventListener('click', () => {
+  Sound.play('meow');
+  setMood(screens.home, 'happy');
+  say($('#homeBubble'), pick(LINES.words));
+});
+
+$('#startBtn').addEventListener('click', () => {
+  const pool = selectedPool();
+  if (!pool.length) return;
+  if (store.settings.sound) Sound.ensure();
+  history.pushState({ screen: 'quiz' }, '');
+  startQuiz(pool, store.settings.count, pool);
+});
+
+/* ================= quiz engine ================= */
+
+const BOX_WEIGHT = [7, 5, 3.2, 2, 1.2, 0.6];
+const NEW_WEIGHT = 4;
+const weightOf = id => {
+  const s = store.stats[id];
+  return s && s.seen ? BOX_WEIGHT[s.box] : NEW_WEIGHT;
+};
+function weightedPick(ids) {
+  const weights = ids.map(weightOf);
+  let r = Math.random() * weights.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < ids.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return ids[i];
+  }
+  return ids[ids.length - 1];
+}
+
+function startQuiz(pool, count, distractorPool) {
+  stopQuiz();
+  quiz = {
+    pool: pool.slice(), count, distractorPool: distractorPool.slice(),
+    i: 0, card: null, phase: 'ask', log: [], combo: 0, best: 0, retry: [], recent: [], timer: 0,
+  };
+  lastRun = { pool: quiz.pool, count, distractorPool: quiz.distractorPool };
+  showScreen('quiz');
+  say($('#quizBubble'), pick(LINES.hello));
+  updateCombo();
+  nextCard();
+}
+
+function stopQuiz() {
+  if (quiz) clearTimeout(quiz.timer);
+  quiz = null;
+  const input = $('#typeInput');
+  if (document.activeElement === input) input.blur();
+}
+
+function pickNextId(q) {
+  // Tiny pools (e.g. "practice mistakes"): deal shuffled hands so the order isn't predictable.
+  if (q.pool.length <= 4) {
+    if (!q.bag || !q.bag.length) {
+      q.bag = shuffle(q.pool.slice());
+      if (q.bag.length > 1 && q.bag[0] === q.recent[q.recent.length - 1]) q.bag.push(q.bag.shift());
+    }
+    return q.bag.shift();
+  }
+  const k = Math.min(3, q.pool.length - 1);
+  const recent = q.recent.slice(-k);
+  // Near the end of a round, let misses come back sooner so they still get a second try.
+  const tail = q.count - q.i <= 3;
+  const due = q.retry.find(r => r.due <= q.i && (tail ? r.id !== q.recent[q.recent.length - 1] : !recent.includes(r.id)));
+  if (due) return due.id;
+  const fresh = q.pool.filter(id => !recent.includes(id));
+  return weightedPick(fresh.length ? fresh : q.pool);
+}
+
+function buildOptions(id, distractorPool) {
+  const picked = [];
+  const canAdd = c => c !== id && !picked.includes(c) && ![id, ...picked].some(p => overlaps(KANA[p], KANA[c]));
+  const inPool = new Set(distractorPool);
+  const looks = shuffle([...LOOK[id]]);
+  // Up to 2 look-alikes. Dakuten siblings count even if their row isn't selected, but a
+  // plain kana gets at most one (ヘ with both ベ and ペ would be an easy 50/50).
+  const siblingOk = c => SIBLING[id].has(c) && (KANA[id].group === 'voiced' || picked.every(p => inPool.has(p)));
+  for (const c of looks) {
+    if (picked.length >= 2) break;
+    if ((inPool.has(c) || siblingOk(c)) && canAdd(c)) picked.push(c);
+  }
+  for (const c of shuffle(distractorPool.slice())) { if (picked.length >= 3) break; if (canAdd(c)) picked.push(c); }
+  for (const c of looks) { if (picked.length >= 3) break; if (canAdd(c)) picked.push(c); }
+  for (const c of shuffle(ALL_IDS.slice())) { if (picked.length >= 3) break; if (canAdd(c)) picked.push(c); }
+  return shuffle([id, ...picked]);
+}
+
+function nextCard() {
+  const q = quiz;
+  if (!q) return;
+  clearTimeout(q.timer);
+  if (q.i >= q.count) return finishQuiz();
+  const id = pickNextId(q);
+  q.retry = q.retry.filter(r => r.id !== id);
+  q.recent.push(id);
+  if (q.recent.length > 6) q.recent.shift();
+  const s = store.settings;
+  const dir = s.dir === 'mix' ? (Math.random() < 0.5 ? 'fwd' : 'rev') : s.dir;
+  const typing = dir === 'fwd' && s.mode === 'type';
+  q.card = { id, dir, typing, options: typing ? null : buildOptions(id, q.distractorPool) };
+  q.phase = 'ask';
+  renderCard();
+}
+
+function setProgress(q) {
+  const pct = Math.round((q.i / q.count) * 100);
+  $('#bar').style.width = pct + '%';
+  $('#progress').setAttribute('aria-valuenow', String(pct));
+}
+
+function renderCard() {
+  const q = quiz, c = q.card, k = KANA[c.id];
+  $('#count').textContent = `${Math.min(q.i + 1, q.count)}/${q.count}`;
+  setProgress(q);
+  const card = $('#card');
+  card.classList.remove('good', 'bad');
+  restartAnim(card, 'deal');
+  $('#cardHint').textContent = c.dir === 'fwd' ? 'What sound is this?' : 'Find the katakana for…';
+  const prompt = $('#prompt');
+  prompt.className = 'prompt ' + (c.dir === 'fwd' ? 'is-kana' : 'is-romaji');
+  prompt.lang = c.dir === 'fwd' ? 'ja' : 'en';
+  prompt.textContent = c.dir === 'fwd' ? c.id : promptText(k);
+  $('#reveal').innerHTML = '';
+  setMood(screens.quiz, 'idle');
+  $('#nextBtn').hidden = true;
+
+  const choices = $('#choices'), form = $('#typeForm'), input = $('#typeInput');
+  if (c.typing) {
+    choices.hidden = true;
+    choices.innerHTML = '';
+    form.hidden = false;
+    input.value = '';
+    input.classList.remove('good', 'bad');
+    $('#checkBtn').textContent = 'Check';
+    $('#skipBtn').hidden = false;
+    input.focus({ preventScroll: true });
+  } else {
+    form.hidden = true;
+    if (document.activeElement === input) input.blur();
+    choices.hidden = false;
+    const isKana = c.dir === 'rev';
+    choices.innerHTML = c.options.map((id, n) =>
+      `<button type="button" class="choice ${isKana ? 'is-kana' : 'is-romaji'}" data-id="${id}"${isKana ? ' lang="ja"' : ''}>` +
+      `<span class="kbd" aria-hidden="true">${n + 1}</span>${isKana ? id : KANA[id].romaji}</button>`
+    ).join('');
+  }
+}
+
+function updateCombo(bump) {
+  const el = $('#combo');
+  const n = quiz ? quiz.combo : 0;
+  el.hidden = n < 2;
+  el.textContent = `🔥 ${n}`;
+  if (bump && n >= 2) restartAnim(el, 'pop');
+}
+
+function answer(correct, info = {}) {
+  const q = quiz;
+  if (!q || q.phase !== 'ask') return;
+  q.phase = 'feedback';
+  const c = q.card, k = KANA[c.id];
+
+  const st = store.stats[c.id] || (store.stats[c.id] = { seen: 0, right: 0, wrong: 0, box: 0, last: 0 });
+  st.seen++;
+  st.last = Date.now();
+  if (correct) { st.right++; st.box = Math.min(5, st.box + 1); }
+  else { st.wrong++; st.box = Math.max(0, st.box - 2); }
+  saveStore();
+
+  q.log.push({ id: c.id, dir: c.dir, correct });
+  q.i++;
+  setProgress(q);
+
+  const main = c.dir === 'fwd'
+    ? `<span lang="ja">${c.id}</span> = ${k.romaji}`
+    : `${promptText(k)} = <span lang="ja">${c.id}</span>`;
+  const alt = k.accept.length > 1 && !(c.dir === 'rev' && k.label) ? ` <small>(also ${k.accept.slice(1).join(', ')})</small>` : '';
+  let oops = '';
+  if (!correct && info.pickedId) {
+    const p = KANA[info.pickedId];
+    oops = `<span class="oops">you picked <span lang="ja">${p.id}</span> = ${p.romaji}</span>`;
+  } else if (!correct && info.typed) {
+    const tid = kanaForInput(info.typed);
+    oops = `<span class="oops">you typed “${esc(info.typed)}”${tid ? ` = <span lang="ja">${tid}</span>` : ''}</span>`;
+  }
+  $('#reveal').innerHTML = `<span class="ans">${main}${alt}</span>${oops}`;
+
+  const card = $('#card');
+  if (correct) {
+    q.combo++;
+    q.best = Math.max(q.best, q.combo);
+    const milestone = q.combo % 5 === 0;
+    card.classList.remove('deal');
+    restartAnim(card, 'good');
+    setMood(screens.quiz, milestone ? 'wow' : 'happy');
+    say($('#quizBubble'), milestone ? [`コンボ ×${q.combo}!`, 'konbo', `${q.combo} in a row!`] : pick(LINES.good));
+    Sound.play(milestone ? 'combo' : 'good');
+    burst(card, milestone ? { count: 70, power: 1.1 } : { count: 14, power: 0.55 });
+    q.timer = setTimeout(nextCard, milestone ? 1200 : 850);
+  } else {
+    q.combo = 0;
+    if (!q.retry.some(r => r.id === c.id)) {
+      q.retry.push({ id: c.id, due: Math.min(q.count - 1, q.i + 2 + Math.floor(Math.random() * 3)) });
+    }
+    card.classList.remove('deal');
+    restartAnim(card, 'bad');
+    setMood(screens.quiz, 'sad');
+    say($('#quizBubble'), pick(LINES.bad));
+    Sound.play('bad');
+    buzz(90);
+    if (c.typing) {
+      $('#checkBtn').textContent = 'Next →';
+      $('#skipBtn').hidden = true;
+    } else {
+      const next = $('#nextBtn');
+      next.hidden = false;
+      next.focus({ preventScroll: true });
+    }
+  }
+  updateCombo(correct);
+}
+
+/* -- tap answers -- */
+function choose(id) {
+  const q = quiz;
+  if (!q || q.phase !== 'ask') return;
+  const ok = id === q.card.id;
+  document.querySelectorAll('#choices .choice').forEach(b => {
+    b.disabled = true;
+    if (b.dataset.id === q.card.id) b.classList.add('correct');
+    else if (b.dataset.id === id) b.classList.add('wrong');
+  });
+  answer(ok, { pickedId: ok ? null : id });
+}
+$('#choices').addEventListener('click', e => {
+  const b = e.target.closest('.choice');
+  if (b) choose(b.dataset.id);
+});
+$('#nextBtn').addEventListener('click', () => { if (quiz && quiz.phase === 'feedback') nextCard(); });
+document.addEventListener('keydown', e => {
+  if (!quiz || screens.quiz.hidden || !quiz.card || quiz.card.typing) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (quiz.phase === 'ask' && /^[1-4]$/.test(e.key)) {
+    const id = quiz.card.options[Number(e.key) - 1];
+    if (id) choose(id);
+  } else if (quiz.phase === 'feedback' && (e.key === 'Enter' || e.key === ' ') && document.activeElement !== $('#nextBtn')) {
+    e.preventDefault();
+    nextCard();
+  }
+});
+
+/* -- typed answers -- */
+const input = $('#typeInput');
+const normalize = v => v.normalize('NFKC').toLowerCase().replace(/[\s'’\-.]/g, '');
+const toKatakana = str => [...str].map(ch => {
+  const cp = ch.codePointAt(0);
+  return cp >= 0x3041 && cp <= 0x3096 ? String.fromCodePoint(cp + 0x60) : ch;
+}).join('');
+const isKanaText = v => /^[ぁ-ゖァ-ヺ]+$/.test(v);
+function kanaForInput(v) {
+  if (isKanaText(v)) { const kk = toKatakana(v); return KANA[kk] ? kk : null; }
+  return ROMAJI_TO_ID[v] || null;
+}
+function isMatch(id, v) {
+  const k = KANA[id];
+  if (k.accept.includes(v)) return true;
+  if (isKanaText(v)) {
+    const kk = toKatakana(v);
+    return kk === id || (KANA[kk] ? overlaps(KANA[kk], k) : false);
+  }
+  return false;
+}
+// Don't auto-accept "n" for ン while the player might still be typing "na", "ni"…
+const canAutoAccept = v => !ALL_ACCEPT.some(r => r !== v && r.startsWith(v));
+
+function submitTyped(v) {
+  const ok = isMatch(quiz.card.id, v);
+  input.classList.add(ok ? 'good' : 'bad');
+  answer(ok, { typed: v });
+}
+// Kana typed with a Japanese keyboard is only accepted once committed, since a flick
+// keyboard passes through か on its way to が.
+function tryAutoAccept(composing) {
+  const q = quiz;
+  if (!q || q.phase !== 'ask' || !q.card.typing) return;
+  const v = normalize(input.value);
+  if (!v || !isMatch(q.card.id, v)) return;
+  if (isKanaText(v) ? !composing : canAutoAccept(v)) submitTyped(v);
+}
+input.addEventListener('input', e => tryAutoAccept(e.isComposing));
+input.addEventListener('compositionend', () => tryAutoAccept(false));
+$('#typeForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const q = quiz;
+  if (!q || !q.card || !q.card.typing) return;
+  if (q.phase === 'feedback') { nextCard(); return; }
+  const v = normalize(input.value);
+  if (!v) { restartAnim(input, 'nudge'); return; }
+  submitTyped(v);
+});
+$('#skipBtn').addEventListener('click', () => {
+  if (!quiz || quiz.phase !== 'ask') return;
+  input.classList.add('bad');
+  answer(false, {});
+});
+// Keep the phone keyboard open when tapping the buttons next to the input.
+for (const id of ['#checkBtn', '#skipBtn']) $(id).addEventListener('mousedown', e => e.preventDefault());
+
+$('#quitBtn').addEventListener('click', goHome);
+
+/* ================= results ================= */
+
+function finishQuiz() {
+  const q = quiz;
+  clearTimeout(q.timer);
+  q.phase = 'done';
+  const right = q.log.filter(l => l.correct).length;
+  const total = q.log.length;
+  const missed = [...new Set(q.log.filter(l => !l.correct).map(l => l.id))];
+  const pct = total ? right / total : 0;
+  const tier = pct === 1 ? 'perfect' : pct >= 0.8 ? 'great' : pct >= 0.5 ? 'ok' : 'low';
+  lastRun.missed = missed;
+  const best = q.best;
+  stopQuiz();
+
+  $('#score').innerHTML = `<div><b>${right}</b><span>/${total}</span></div>`;
+  $('#stats').innerHTML =
+    `<span class="stat">🎯 ${Math.round(pct * 100)}%</span>` +
+    `<span class="stat">🔥 best combo ${best}</span>`;
+  $('#missedPanel').hidden = !missed.length;
+  $('#perfectNote').hidden = missed.length > 0;
+  $('#missedList').innerHTML = missed.map(id =>
+    `<span class="mchip"><b lang="ja">${id}</b><small>${KANA[id].romaji}</small></span>`).join('');
+  const practice = $('#practiceBtn');
+  practice.hidden = !missed.length;
+  practice.textContent = `Practice my ${missed.length} mistake${missed.length === 1 ? '' : 's'}`;
+
+  history.replaceState({ screen: 'results' }, '');
+  showScreen('results');
+  setMood(screens.results, tier === 'perfect' ? 'wow' : tier === 'low' ? 'sad' : 'happy');
+  say($('#resultsBubble'), LINES[tier]);
+  Sound.play(tier === 'low' ? 'bad' : 'win');
+  if (pct >= 0.8) setTimeout(() => burst($('#score'), { count: tier === 'perfect' ? 140 : 80, power: 1.4 }), 150);
+}
+
+function replay(pool, count) {
+  history.replaceState({ screen: 'quiz' }, '');
+  startQuiz(pool, count, lastRun.distractorPool);
+}
+$('#practiceBtn').addEventListener('click', () => {
+  const missed = lastRun.missed || [];
+  if (!missed.length) return;
+  replay(missed, Math.min(20, Math.max(5, missed.length * 3)));
+});
+$('#againBtn').addEventListener('click', () => replay(lastRun.pool, lastRun.count));
+$('#homeBtn').addEventListener('click', goHome);
+
+/* ================= settings ================= */
+
+const dlg = $('#settings');
+const resetBtn = $('#resetBtn');
+let resetTimer = 0;
+$('#settingsBtn').addEventListener('click', () => {
+  $('#optSound').checked = store.settings.sound;
+  $('#optVibrate').checked = store.settings.vibrate;
+  $('#vibrateRow').hidden = !navigator.vibrate;
+  resetBtn.removeAttribute('data-armed');
+  resetBtn.textContent = 'Reset progress';
+  if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+});
+$('#optSound').addEventListener('change', e => {
+  store.settings.sound = e.target.checked;
+  saveStore();
+  Sound.play('tap');
+});
+$('#optVibrate').addEventListener('change', e => {
+  store.settings.vibrate = e.target.checked;
+  saveStore();
+  buzz(40);
+});
+resetBtn.addEventListener('click', () => {
+  if (!resetBtn.hasAttribute('data-armed')) {
+    resetBtn.setAttribute('data-armed', '');
+    resetBtn.textContent = 'Tap again to erase everything';
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(() => { resetBtn.removeAttribute('data-armed'); resetBtn.textContent = 'Reset progress'; }, 4000);
+    return;
+  }
+  clearTimeout(resetTimer);
+  store.stats = {};
+  saveStore();
+  renderHome();
+  resetBtn.removeAttribute('data-armed');
+  resetBtn.textContent = 'Progress cleared ✓';
+});
+
+/* ================= install + offline ================= */
+
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  installEvt = e;
+  $('#installBtn').hidden = false;
+});
+$('#installBtn').addEventListener('click', async () => {
+  if (!installEvt) return;
+  installEvt.prompt();
+  try { await installEvt.userChoice; } catch (e) { /* ignore */ }
+  installEvt = null;
+  $('#installBtn').hidden = true;
+});
+window.addEventListener('appinstalled', () => { $('#installBtn').hidden = true; });
+
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname))) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+    // The worker isn't running yet when the fonts first load, so copy them into its cache
+    // now; otherwise the first offline launch would fall back to the system font.
+    navigator.serviceWorker.ready
+      .then(() => caches.open('katakata-fonts'))
+      .then(cache => Promise.all(performance.getEntriesByType('resource')
+        .map(e => e.name)
+        .filter(u => /^https:\/\/fonts\.(googleapis|gstatic)\.com\//.test(u))
+        .map(u => cache.match(u).then(hit => hit || cache.add(new Request(u, { mode: 'cors' }))))))
+      .catch(() => {});
+    // Ask Chrome not to evict the offline copy of an installed app.
+    if (navigator.storage && navigator.storage.persist && matchMedia('(display-mode: standalone)').matches) {
+      navigator.storage.persisted().then(p => p || navigator.storage.persist()).catch(() => {});
+    }
+  });
+}
+
+/* ================= go ================= */
+
+// Keep progress in sync if the app is open twice (e.g. installed app + a browser tab).
+function resync() {
+  const fresh = loadStore();
+  store.settings = fresh.settings;
+  store.stats = fresh.stats;
+  if (!screens.home.hidden) renderHome();
+}
+window.addEventListener('storage', e => { if (e.key === STORE_KEY || e.key === null) resync(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') resync(); });
+
+// A reload mid-round lands on Home; drop the stale quiz history entry so Back isn't a no-op.
+if (history.state && history.state.screen) {
+  history.replaceState(null, '');
+  if (history.length > 1) history.back();
+}
+showHome();
+})();
+</script>
+</body>
+</html>
